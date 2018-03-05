@@ -1,0 +1,5 @@
+list=input().split()
+n=int(list[0])
+m=int(list[1])
+a=int(list[2])
+print ((n//a+(n%a>0))*(m//a+(m%a>0)))
