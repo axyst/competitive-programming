@@ -991,17 +991,68 @@ int main()
     return 0;
 }
 //Catalan数
-//Cn+1=C2Cn+C3Cn-1+...+CnC2
-//将正n边形用对角线剖分为三角形的方法数为Cn
-//n个数的乘积a1a2...an的不同结合方法数为Cn+1
-//在整数坐标平面的格子上，从点(0, 0)到点(n, n)由垂直和水平线段组
-//成的路径，要求中间点(a, b)满足a ≤ b(即必须在y=x的上面走)，则路径
-//条数为Cn+2
-//C2-C10的值分别为1, 1, 2, 5, 14, 42, 132, 429, 1430,4862
-//以下a[i]中逆序存放c,b[i]中存放长度，特判1,2
+/*The Catalan number Cn is the solution for
+
+Number of correct bracket sequence consisting of n opening and n closing brackets.
+The number of rooted full binary trees with n+1 leaves (vertices are not numbered). A rooted binary tree is full if every vertex has either two children or no children.
+The number of ways to completely parenthesize n+1 factors.
+The number of triangulations of a convex polygon with n+2 sides (i.e. the number of partitions of polygon into disjoint triangles by using the diagonals).
+The number of ways to connect the 2n points on a circle to form n disjoint chords.
+The number of non-isomorphic full binary trees with n internal nodes (i.e. nodes having at least one son).
+The number of monotonic lattice paths from point (0,0) to point (n,n) in a square lattice of size n×n, which do not pass above the main diagonal (i.e. connecting (0,0) to (n,n)).
+Number of permutations of length n that can be stack sorted (i.e. it can be shown that the rearrangement is stack sorted if and only if there is no such index i<j<k, such that ak<ai<aj ).
+The number of non-crossing partitions of a set of n elements.
+The number of ways to cover the ladder 1…n using n rectangles (The ladder consists of n columns, where ith column has a height i).*/
+// recursive (O(C^n))
+const int MOD;
+const int MAX;
+int catalan[MAX];
+void init() {
+    catalan[0] = catalan[1] = 1;
+    for (int i=2; i<=n; i++) {
+        catalan[i] = 0;
+        for (int j=0; j < i; j++) {
+            catalan[i] += (catalan[j] * catalan[i-j-1]) % MOD;
+            if (catalan[i] >= MOD) {
+                catalan[i] -= MOD;
+            }
+        }
+    }
+}
+// analytical (O(n))
+#include<iostream>
+using namespace std;
+// Returns value of Binomial Coefficient C(n, k)
+unsigned long int binomialCoeff(unsigned int n, unsigned int k)
+{
+    unsigned long int res = 1;
+
+    // Since C(n, k) = C(n, n-k)
+    if (k > n - k)
+        k = n - k;
+
+    // Calculate value of [n*(n-1)*---*(n-k+1)] / [k*(k-1)*---*1]
+    for (int i = 0; i < k; ++i)
+    {
+        res *= (n - i);
+        res /= (i + 1);
+    }
+
+    return res;
+}
+// nth catalan number
+unsigned long int catalan(unsigned int n)
+{
+    // Calculate value of 2nCn
+    unsigned long int c = binomialCoeff(2*n, n);
+
+    // return 2nCn/(n+1)
+    return c/(n+1);
+}
+//DP O(n^2) 求C3~Cnum+1
 int a[1005][1005];
 int b[maxn];
-void catalan(int num)//求C3~Cnum+1
+void catalan(int num)
 {
     int i, j, len, carry, temp;
     a[1][0]=b[1]=1;
@@ -1039,7 +1090,7 @@ int main()
     catalan(9);
     for(int i=2;i<=9;i++)//C3~C10
     {
-        printf("%d %d\n",i+1,b[i]);
+        //printf("%d %d\n",i+1,b[i]);
         int len=b[i];
         for(int j=len-1;j>=0;j--) printf("%d",a[i][j]);
         printf("\n");
