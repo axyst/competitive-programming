@@ -51,21 +51,25 @@ LL DJBhash(char str[])
         hasher=((hasher<<5)+hasher)+str[i];
     return hasher;
 }
-LL doublehash(int id,char* str)
+LL hashing(int id,char* str)
 {
-	LL mod,pow=1,ans=0;
-	if(id==1)
-		mod=1000000000+7;
-	else
-		mod=1000000000+9;
-	int n=strlen(str);
-	for(int i=n-1;i>=0;i--)
-	{
-		LL character=str[i]-'A'+1;
-		ans+=(character*pow)%mod;
-		pow=(pow*59)%mod;
-	}
-	return ans%mod;
+    LL mod,pow=1,ans=0;
+    if(id==1)
+        mod=1000000000+7;
+    else
+        mod=1000000000+9;
+    int n=strlen(str);
+    for(int i=n-1;i>=0;i--)
+    {
+        LL character=str[i]-'A'+1;
+        ans=(ans+character*pow)%mod;
+        pow=(pow*59)%mod;
+    }
+    return ans;
+}
+pair<LL,LL>doublehash(char* str)
+{
+    return{hashing(1,str),hashing(0,str)};
 }
 struct Hashmap
 {
@@ -89,7 +93,31 @@ struct Hashmap
         Add(x,y);stk[++top]=x;return w[E];
     }
 };
-//d-BFS
+//BFS
+vector<vector<int>> adj;
+int n;
+int s;
+
+queue<int> q;
+vector<bool> used(n);
+vector<int> d(n), p(n);
+
+q.push(s);
+used[s] = true;
+p[s] = -1;
+while (!q.empty()) {
+    int v = q.front();
+    q.pop();
+    for (int u : adj[v]) {
+        if (!used[u]) {
+            used[u] = true;
+            q.push(u);
+            d[u] = d[v] + 1;
+            p[u] = v;
+        }
+    }
+}
+
 bool doubleBFS(int a,int b)
 {
     memset(vis1,0,sizeof(vis1));
@@ -118,6 +146,41 @@ bool doubleBFS(int a,int b)
     }
 }
 //DFS
+//If v is not visited:
+//
+//Tree Edge - If v is visited after u then edge (u,v) is called a tree edge. In other words, if v is visited for the first time and u is currently being visited then (u,v) is called tree edge. These edges form a DFS tree and hence the name tree edges.
+//If v is visited before u:
+//
+//Back edges - If v is an ancestor of u, then the edge (u,v) is a back edge. v is an ancestor exactly if we already entered v, but not exited it yet. Back edges complete a cycle as there is a path from ancestor v to descendant u (in the recursion of DFS) and an edge from descendant u to ancestor v (back edge), thus a cycle is formed. Cycles can be detected using back edges.
+//
+//Forward Edges - If v is a descendant of u, then edge (u,v) is a forward edge. In other words, if we already visited and exited v and entry[u]<entry[v] then the edge (u,v) forms a forward edge.
+//
+//Cross Edges: if v is neither an ancestor or descendant of u, then edge (u,v) is a cross edge. In other words, if we already visited and exited v and entry[u]>entry[v] then (u,v) is a cross edge.
+vector<vector<int>> adj;
+int n;
+int s;
+stack<int> st;
+vector<bool> used(n);
+vector<int> color;
+vector<int> time_in, time_out;
+int dfs_timer = 0;
+
+st.push(s);
+used[s] = true;
+while (!st.empty()) {
+    int v = st.pop();
+    time_in[v] = dfs_timer++;
+    color[v] = 1;
+    for (int u : adj[v]) {
+        if (!used[u]) {
+            used[u] = true;
+            st.push(u);
+        }
+    }
+    color[v] = 2;
+    time_out[v] = dfs_timer++;
+}
+
 void dfs(int cur,int fa)
 {
     father[cur]=fa;

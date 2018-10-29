@@ -474,6 +474,53 @@ LL inv(LL a,LL b)// b is mod
     exgcd(a,b,ret,dummy);
     return dummy;
 }
+// get all solution
+void shift_solution (int & x, int & y, int a, int b, int cnt) {
+    x += cnt * b;
+    y -= cnt * a;
+}
+
+int find_all_solutions (int a, int b, int c, int minx, int maxx, int miny, int maxy) {
+    int x, y, g;
+    if (! find_any_solution (a, b, c, x, y, g))
+        return 0;
+    a /= g;  b /= g;
+
+    int sign_a = a>0 ? +1 : -1;
+    int sign_b = b>0 ? +1 : -1;
+
+    shift_solution (x, y, a, b, (minx - x) / b);
+    if (x < minx)
+        shift_solution (x, y, a, b, sign_b);
+    if (x > maxx)
+        return 0;
+    int lx1 = x;
+
+    shift_solution (x, y, a, b, (maxx - x) / b);
+    if (x > maxx)
+        shift_solution (x, y, a, b, -sign_b);
+    int rx1 = x;
+
+    shift_solution (x, y, a, b, - (miny - y) / a);
+    if (y < miny)
+        shift_solution (x, y, a, b, -sign_a);
+    if (y > maxy)
+        return 0;
+    int lx2 = x;
+
+    shift_solution (x, y, a, b, - (maxy - y) / a);
+    if (y > maxy)
+        shift_solution (x, y, a, b, sign_a);
+    int rx2 = x;
+
+    if (lx2 > rx2)
+        swap (lx2, rx2);
+    int lx = max (lx1, lx2);
+    int rx = min (rx1, rx2);
+
+    if (lx > rx) return 0;
+    return (rx - lx) / abs(b) + 1;
+}
 //Chinese remainder
 //X mod m[0] = a[0], …, X mod m[i] = a[i],get X
 /*
@@ -655,7 +702,149 @@ void range(int a[],int k,int n)
         swap(a[k],a[i]);
     }
 }
+// Given the natural numbers N and K, derive all subsets of size K
+bool next_combination(vector<int>& a, int n) {
+    int k = (int)a.size();
+    for (int i = k - 1; i >= 0; i--) {
+        if (a[i] < n - k + i + 1) {
+            a[i]++;
+            for (int j = i + 1; j < k; j++)
+                a[j] = a[j - 1] + 1;
+            return true;
+        }
+    }
+    return false;
+}
+//  Generate all K-combinations in such an order, that adjacent combinations differ exactly by one element
+int gray_code (int n) {
+    return n ^ (n >> 1);
+}
+
+int count_bits (int n) {
+    int res = 0;
+    for (; n; n >>= 1)
+        res += n & 1;
+    return res;
+}
+
+void all_combinations (int n, int k) {
+    for (int i = 0; i < (1 << n); i++) {
+        int cur = gray_code (i);
+        if (count_bits(cur) == k) {
+            for (int j = 0; j < n; j++) {
+                if (cur & (1 << j))
+                    cout << j + 1;
+            }
+            cout << "\n";
+        }
+    }
+}
+// faster O(N⋅(C_NK))
+vector<int> ans;
+
+void gen(int n, int k, int idx, bool rev) {
+    if (k > n || k < 0)
+        return;
+
+    if (!n) {
+        for (int i = 0; i < idx; ++i) {
+            if (ans[i])
+                cout << i + 1;
+        }
+        cout << "\n";
+        return;
+    }
+
+    ans[idx] = rev;
+    gen(n - 1, k - rev, idx + 1, false);
+    ans[idx] = !rev;
+    gen(n - 1, k - !rev, idx + 1, true);
+}
+
+void all_combinations(int n, int k) {
+    ans.resize(n);
+    gen(n, k, 0, false);
+}
 //prime&euler
+//The number of prime numbers less than or equal to n is approximately n/ln n.
+// prime list
+// O(n)
+const int N = 10000000;
+int lp[N+1];
+vector<int> pr;
+lp[2]=2;pr.push_back(2);
+for (int i=3; i*i<=N; i+=2) {
+    if (lp[i] == 0) {
+        lp[i] = i;
+        pr.push_back (i);
+    }
+    for (int j=0; j<(int)pr.size() && pr[j]<=lp[i] && i*pr[j]<=N; ++j)
+        lp[i * pr[j]] = pr[j];
+}
+// O(nloglogn)
+int n;
+int cnt=0;
+int prime[maxn];
+// char is faster than bool
+vector<char> is_prime(n+1, true);
+is_prime[0] = is_prime[1] = false;
+is_prime[2] = true;
+for (int i = 3; i * i <= n; i+=2) {
+    if (is_prime[i] && (long long)i * i <= n) {
+        prime[cnt++] = i;
+        for (int j = i * i; j <= n; j += i)
+        is_prime[j] = false;
+    }
+}
+// count prime(O(sqrt(n)+S) memory)
+int count_primes(int n) {
+    const int S = 10000;
+    vector<int> primes;
+    int nsqrt = sqrt(n);
+    vector<char> is_prime(nsqrt + 1, true);
+    for (int i = 2; i <= nsqrt; i++) {
+        if (is_prime[i]) {
+            primes.push_back(i);
+            for (int j = i * i; j <= nsqrt; j += i)
+                is_prime[j] = false;
+        }
+    }
+
+    int result = 0;
+    vector<char> block(S);
+    for (int k = 0; k * S <= n; k++) {
+        fill(block.begin(), block.end(), true);
+        int start = k * S;
+        for (int p : primes) {
+            int start_idx = (start + p - 1) / p;
+            int j = max(start_idx, p) * p - start;
+            for (; j < S; j += p)
+                block[j] = false;
+        }
+        if (k == 0)
+            block[0] = block[1] = false;
+        for (int i = 0; i < S && start + i <= n; i++) {
+            if (block[i])
+                result++;
+        }
+    }
+    return result;
+}
+// euler O(sqrt(n))
+int phi(int n) {
+    int result = n;
+    for (int i = 2; i * i <= n; i++) {
+        if(n % i == 0) {
+            while(n % i == 0)
+                n /= i;
+            result -= result / i;
+        }
+    }
+    if(n > 1)
+        result -= result / n;
+    return result;
+}
+// euler func list
 int t;
 int cnt=0;
 int prime[maxn];
@@ -665,7 +854,7 @@ void Prime(int n)//求出n以内(<n)所有素数以及所有<n的数的欧拉函
 {//下标从0开始
     cnt=0;
     memset(vis,0,sizeof(vis));
-    for(int i=2; i<n; i++)
+    for(int i=2; i*i<n; i++)
     {
         if(!vis[i])
         {
@@ -1132,6 +1321,22 @@ C(fi ) =gcd(n,i),i 表示旋转 i 颗宝石以后。 i=0 时 gcd(n,0)=n
 如果 n 为偶数：则有 n/2 个置换C(f)=n/2
 如果 n 为奇数：则有 n 个置换C(f)=n/2
 */
+// 循环节计数
+int count_cycles(Permutation p) {
+    int cnt = 0;
+    for (int i = 0; i < p.size(); i++) {
+        if (p[i] != -1) {
+            cnt++;
+            for (int j = i; p[j] != -1;) {
+                int next = p[j];
+                p[j] = -1;
+                j = next;
+            }
+        }
+    }
+    return cnt;
+}
+
 //高斯消元
 #define eps 1e-9
 const int maxn=220;
@@ -1275,3 +1480,34 @@ int main()
     return 0;
 }
 //校验三角形数：如果n=(sqrt(s*x+1)-1)/2为整数,那么x是第n个三角形数
+// 原根 (g that g^k≡a(modn), a∈[1,n-1]
+int powmod (int a, int b, int p) {
+    int res = 1;
+    while (b)
+        if (b & 1)
+            res = int (res * 1ll * a % p),  --b;
+        else
+            a = int (a * 1ll * a % p),  b >>= 1;
+    return res;
+}
+
+int generator (int p) {
+    vector<int> fact;
+    int phi = p-1,  n = phi;
+    for (int i=2; i*i<=n; ++i)
+        if (n % i == 0) {
+            fact.push_back (i);
+            while (n % i == 0)
+                n /= i;
+        }
+    if (n > 1)
+        fact.push_back (n);
+
+    for (int res=2; res<=p; ++res) {
+        bool ok = true;
+        for (size_t i=0; i<fact.size() && ok; ++i)
+            ok &= powmod (res, phi / fact[i], p) != 1;
+        if (ok)  return res;
+    }
+    return -1;
+}

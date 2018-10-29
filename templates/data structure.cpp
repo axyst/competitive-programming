@@ -4,7 +4,7 @@
 using namespace std;
 typedef long long LL;
 const int INF=0x3f3f3f3f;
-//BIT O(logn)
+//BIT 每次操作O(logn)
 int vis[maxs];
 int lowbit(int x){return x & -x;}
 void add(int x,int v)
@@ -25,9 +25,80 @@ int sum(int x)
     }
     return ret;
 }
-//RMQ O(nlogn)
+// sum
+struct FenwickTree {
+    vector<int> bit;  // binary indexed tree
+    int n;
+
+    void init(int n) {
+        this->n = n;
+        bit.assign(n, 0);
+    }
+    int sum(int r) {
+        int ret = 0;
+        for (; r >= 0; r = (r & (r + 1)) - 1)
+            ret += bit[r];
+        return ret;
+    }
+    void add(int idx, int delta) {
+        for (; idx < n; idx = idx | (idx + 1))
+            bit[idx] += delta;
+    }
+    int sum(int l, int r) {
+        return sum(r) - sum(l - 1);
+    }
+    void init(vector<int> a) {
+        init(a.size());
+        for (size_t i = 0; i < a.size(); i++)
+            add(i, a[i]);
+    }
+};
+// min
+struct FenwickTreeMin {
+    vector<int> bit;
+    int n;
+    const int INF = (int)1e9;
+    void init(int n) {
+        this->n = n;
+        bit.assign(n, INF);
+    }
+    int getmin(int r) {
+        int ret = INF;
+        for (; r >= 0; r = (r & (r + 1)) - 1)
+            ret = min(ret, bit[r]);
+        return ret;
+    }
+    void update(int idx, int val) {
+        for (; idx < n; idx = idx | (idx + 1))
+            bit[idx] = min(bit[idx], val);
+    }
+    void init(vector<int> a) {
+        init(a.size());
+        for (size_t i = 0; i < a.size(); i++)
+            update(i, a[i]);
+    }
+};
+// 2D sum
+struct FenwickTree2D {
+    vector<vector<int>> bit;
+    int n, m;
+    // init(...) { ... }
+    int sum(int x, int y) {
+        int ret = 0;
+        for (int i = x; i >= 0; i = (i & (i + 1)) - 1)
+            for (int j = y; j >= 0; j = (j & (j + 1)) - 1)
+                ret += bit[i][j];
+        return ret;
+    }
+    void add(int x, int y, int delta) {
+        for (int i = x; i < n; i = i | (i + 1))
+            for (int j = y; j < m; j = j | (j + 1))
+                bit[i][j] += delta;
+    }
+};
+//RMQ O(nlogn)预处理 O(1)查询
 const int maxn=100010;
-int st[20][maxn];
+int st[25][maxn];
 void RMQinit(int n)
 {
     int tlog=log2(n);
@@ -406,7 +477,7 @@ struct splaytree
         return maxx;
     }
 }spt;
-//主席树
+//主席树(persistent segment tree)
 ///给出一个序列，查询区间内有多少个不相同的数
 #include<bits/stdc++.h>
 #define rep(i,a,b) for (int (i)=(a);(i)<=(b);++(i))
@@ -614,4 +685,82 @@ int main()
         }
     }
     return 0;
+}
+// Sqrt Decomposition (Mo's algorithm)  分块 (一层sqrt(n)叉的线段树)
+// query only 每次O(logn)
+int n;
+vector<int> a (n);
+
+int len = (int) sqrt (n + .0) + 1; // size of the blocks
+vector<int> b (len);
+for (int i=0; i<n; ++i)
+b[i / len] += a[i];
+
+for (;;) {
+    int l, r;
+    // read input data for the next query
+    int sum = 0;
+    int c_l = l / len,   c_r = r / len;
+    if (c_l == c_r)
+        for (int i=l; i<=r; ++i)
+            sum += a[i];
+    else {
+        for (int i=l, end=(c_l+1)*len-1; i<=end; ++i)
+        sum += a[i];
+        for (int i=c_l+1; i<=c_r-1; ++i)
+        sum += b[i];
+        for (int i=c_r*len; i<=r; ++i)
+        sum += a[i];
+    }
+}
+// Mo 离线操作O((m+n)√n) 预处理O(mlogm) (m为查询次数）
+bool cmp(pair<int, int> p, pair<int, int> q) {
+    if (p.first / BLOCK_SIZE != q.first / BLOCK_SIZE)
+        return p < q;
+    return (p.first / BLOCK_SIZE & 1) ? (p.second < q.second) : (p.second > q.second);
+}
+void remove(idx);  // TODO: remove value at idx from data structure
+void add(idx);     // TODO: add value at idx from data structure
+int get_answer();  // TODO: extract the current answer of the data structure
+
+int block_size;
+
+struct Query {
+    int l, r, idx;
+    bool operator<(Query other) const
+    {
+        return make_pair(l / block_size, r) <
+               make_pair(other.l / block_size, other.r);
+    }
+};
+
+vector<int> mo_s_algorithm(vector<Query> queries) {
+    vector<int> answers(queries.size());
+    sort(queries.begin(), queries.end());
+
+    // TODO: initialize data structure
+
+    int cur_l = 0;
+    int cur_r = -1;
+    // invariant: data structure will always reflect the range [cur_l, cur_r]
+    for (Query q : queries) {
+        while (cur_l > q.l) {
+            cur_l--;
+            add(cur_l);
+        }
+        while (cur_r < q.r) {
+            cur_r++;
+            add(cur_r);
+        }
+        while (cur_l < q.l) {
+            remove(cur_l);
+            cur_l++;
+        }
+        while (cur_r > q.r) {
+            remove(cur_r);
+            cur_r--;
+        }
+        answers[q.idx] = get_answer();
+    }
+    return answers;
 }
