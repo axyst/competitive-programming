@@ -1,5 +1,5 @@
-//二分 hash BFS/DFS STL 基数排序 第k个元素
-//分数类
+//二分 Fibonacci查找 hash BFS/DFS STL 基数排序 第k个元素
+//分数类 二维累积和
 #include<stdio.h>
 #include<stdlib.h>
 #include<algorithm>
@@ -41,6 +41,43 @@ int lowerbound(int key)
         else r=mid-1;
     }
     return l;
+}
+// Fibonacci查找
+void ProduceFib(int *fib, int size)
+{
+    fib[0] = 1; fib[1] = 1;
+    for (int i = 2; i < size; i++)
+        fib[i] = fib[i - 1] + fib[i - 2];
+}
+int FibonacciSearch(int *data, int length, int searchValue)
+{
+    int low=0, high=length-1, mid, k=0, i, fib[FIB_MAXSIZE];
+    ProduceFib(fib, FIB_MAXSIZE);
+    // 找到有序表元素个数在斐波那契数列中最接近的最大数列值
+    while (high > fib[k] - 1)  k++;
+    // 补齐有序表
+    for (i = length; i <= fib[k] - 1; i++)
+        data[i] = data[high];
+    while (low <= high)
+    {
+        mid = low + fib[k - 1] - 1;   // 根据斐波那契数列进行黄金分割
+        if (data[mid] == searchValue)
+        {
+            if (mid <= length - 1) return mid;
+            else return length - 1;// 说明查找得到的数据元素是补全值
+        }
+        if (data[mid] > searchValue)
+        {
+            high = mid - 1;
+            k = k - 1;
+        }
+        if (data[mid] < searchValue)
+        {
+            low = mid + 1;
+            k = k - 2;
+        }
+    }
+    return -1;
 }
 //hash
 LL DJBhash(char str[])
@@ -300,3 +337,16 @@ class Fraction
         return out;
     }
 };
+// 二维累积和 https://www.hankcs.com/program/algorithm/imos_method.html
+for (int i = 1; i <= N; i++) {
+	cnt[lx[i]][ly[i]] += 1;
+	cnt[lx[i]][ry[i]] -= 1;
+	cnt[rx[i]][ly[i]] -= 1;
+	cnt[rx[i]][ry[i]] += 1;
+}
+for (int i = 0; i <= 1000; i++) {
+	for (int j = 1; j <= 1000; j++) cnt[i][j] += cnt[i][j - 1];
+}
+for (int i = 1; i <= 1000; i++) {
+	for (int j = 0; j <= 1000; j++) cnt[i][j] += cnt[i - 1][j];
+}

@@ -1,5 +1,5 @@
 //KMP Manacher AC自动机 后缀数组(SA) 后缀自动机(SAM)
-//Z-algorithm
+//Z-algorithm RLE
 #include<bits/stdc++.h>
 using namespace std;
 typedef long long LL;
@@ -527,3 +527,23 @@ vector<int> rabin_karp(string const& s, string const& t) {
     }
     return occurences;
 }
+//Run length Encoding
+int Rle_Encode_N(unsigned char *inbuf, int inSize, unsigned char *outbuf, int onuBufSize)
+{
+     unsigned char *src = inbuf;int i;int encSize = 0;
+     while(src < (inbuf + inSize))
+     {
+         if((encSize + 2) > onuBufSize) /*输出缓冲区空间不够了*/
+            return -1;
+         unsigned char value = *src++;
+         i = 1;
+         while((*src == value) && (i < 255))
+         {
+             src++;
+             i++;
+         }
+         outbuf[encSize++] = i;
+         outbuf[encSize++] = value;
+     }
+     return encSize;
+ }
