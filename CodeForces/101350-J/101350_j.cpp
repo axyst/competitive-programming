@@ -1,5 +1,3 @@
- By lyracol, contest: 2017 ACM Arabella Collegiate Programming Contest, problem: (J) Lazy Physics Cat, Accepted, #
-
 #pragma comment(linker, "/STACK:102400000,102400000")
 #include<bits/stdc++.h>
 #define For(i,a,b) for (int i=(a),_##i=(b); i<=_##i; ++i)
